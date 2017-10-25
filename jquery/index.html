@@ -1,4 +1,17 @@
 <!DOCTYPE html>
+<script src="https://www.gstatic.com/firebasejs/4.6.0/firebase.js"></script>
+<script>
+	// Initialize Firebase
+	var config = {
+	  apiKey: "AIzaSyDNq48BmHBTt1dPevVKJCrNdmdSqmol4nU",
+	  authDomain: "entertaiment-cd3c5.firebaseapp.com",
+	  databaseURL: "https://entertaiment-cd3c5.firebaseio.com",
+	  projectId: "entertaiment-cd3c5",
+	  storageBucket: "entertaiment-cd3c5.appspot.com",
+	  messagingSenderId: "501517300391"
+	};
+	firebase.initializeApp(config);
+  </script>
 <html>
 	<head>
 		<title>Youtube Channedl Vids</title>
@@ -24,6 +37,9 @@
 		<div id="container">
 			<h1>Youtube Videos</h1>
 			<ul id="results"></ul>
+		</div>
+		<div>
+			<button id="btnClick" onclick="submitClick()">Upload to Firebase</button>
 		</div>
 	</body>
 </html>
