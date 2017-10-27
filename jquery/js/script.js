@@ -1,13 +1,19 @@
 var channelName = 'DJASSKICKER';
 var video;
 var dataItem = null;
+var firebaseRef = null;
+
 // When submit Channel link
 function submitChannel() {
 	//initial
 	dataItem = null;
 	//clear
 	$('#results').html('');
-	var firebaseRef = firebase.database().ref("Video");	
+
+	// init firebase
+	firebaseChannelRef = firebase.database().ref("channel");
+	firebaseRef = firebase.database().ref("video");
+
 
 	var channelLink = $("#channelLink").val();
 	var flg = detectChannel(channelLink);
@@ -38,6 +44,9 @@ function submitPlaylist() {
 	// clear
 	$('#results').html('');
 
+	// init firebase
+	firebaseRef = firebase.database().ref("video");	
+
 	var playlistLink = $('#playlistLink').val();
 	var key = getPlayListFromUrl(playlistLink);
 	//console.log("playlistId: " + key)
@@ -57,6 +66,9 @@ function submitPlaylist() {
 function submitVideo() {
 	// clear
 	$('#results').html('');
+
+	// init firebase
+	firebaseRef = firebase.database().ref("video");	
 
 	var videoLink = $('#videoLink').val();
 	var key = getVideoFromUrl(videoLink);
@@ -104,19 +116,22 @@ function getVids(dataVid){
 				videoTitle = item.snippet.title;
 				videoId = item.snippet.resourceId.videoId;
 				videoImage = item.snippet.thumbnails.high.url;
-				videoGeneral = 'true';					
+				videoGeneral = 'true';				
+				videoPublishedAt = item.snippet.publishedAt;	
 				
 				video = {
 					categoryId: '',
 					image: videoImage,
 					isGeneral: 'true',
 					title: videoTitle,
-					videoId: videoId 
+					videoId: videoId ,
+					publishedAt: videoPublishedAt
 				}
 
 				//console.log(JSON.parse(JSON.stringify(video)));
 
-				//firebaseRef.push().set(video);
+				// push data to firebase
+				firebaseRef.push().set(video);
 
 				// get CategoryId
 				//getCategoryId(videoId);
@@ -186,15 +201,20 @@ function getVideoById(videoId, data){
 				videoId = videoId;
 				videoImage = item.snippet.thumbnails.high.url;
 				videoGeneral = 'true';	
-				videoCategoryId = item.snippet.categoryId;				
+				videoCategoryId = item.snippet.categoryId;	
+				videoPublishedAt = item.snippet.publishedAt;				
 				
 				video = {
 					categoryId: videoCategoryId,
 					image: videoImage,
 					isGeneral: 'true',
 					title: videoTitle,
-					videoId: videoId 
+					videoId: videoId ,
+					publishedAt: videoPublishedAt
 				}
+
+				// push data to firebase
+				firebaseRef.push().set(video);
 			})
 		}
 	)
