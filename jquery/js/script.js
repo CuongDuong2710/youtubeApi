@@ -1,7 +1,10 @@
 var channelName = 'DJASSKICKER';
 var video;
 var dataItem = null;
+// When submit Channel link
 function submitChannel() {
+	//initial
+	dataItem = null;
 	//clear
 	$('#results').html('');
 	var firebaseRef = firebase.database().ref("Video");	
@@ -28,12 +31,55 @@ function submitChannel() {
 
 }
 
+// When submit Playlist link
+function submitPlaylist() {
+	//initial
+	dataItem = null;
+	// clear
+	$('#results').html('');
+
+	var playlistLink = $('#playlistLink').val();
+	var key = getPlayListFromUrl(playlistLink);
+	//console.log("playlistId: " + key)
+
+	if(key != null) {
+		dataItem = {
+			part: 'snippet',
+			maxResults: 50,
+			playlistId: key,
+			key: 'AIzaSyDlMX3v-eiC_SLkwuOrpvL19lRpTZbW4fI'
+		};
+		getVids(dataItem);
+	}
+}
+
+// When submit Video link
+function submitVideo() {
+	// clear
+	$('#results').html('');
+
+	var videoLink = $('#videoLink').val();
+	var key = getVideoFromUrl(videoLink);
+
+	var data = null;
+	if(key !== null) {
+		data = {
+			part: 'snippet',
+			id: key,
+			key: 'AIzaSyDlMX3v-eiC_SLkwuOrpvL19lRpTZbW4fI'
+		};
+	}
+
+	getVideoById(key, data);
+}
+
+// get upload id
 function getUploadsId(data) {
 	$.get(
 		"https://www.googleapis.com/youtube/v3/channels", data,
 			function(data){
 				$.each(data.items, function(i, item){
-					//console.log(item);
+					console.log(item);
 					pid = item.contentDetails.relatedPlaylists.uploads;
 					dataItem = {
 						part: 'snippet',
@@ -47,6 +93,7 @@ function getUploadsId(data) {
 	);
 }
 
+// get all video of channels
 function getVids(dataVid){
 	$.get(
 	"https://www.googleapis.com/youtube/v3/playlistItems", dataVid,
@@ -72,7 +119,7 @@ function getVids(dataVid){
 				//firebaseRef.push().set(video);
 
 				// get CategoryId
-				getCategoryId(videoId);
+				//getCategoryId(videoId);
 
 				//output = '<li><iframe src=\"//www.youtube.com/embed/'+videoId+'\"></iframe></li>';
 				output = '<li>'+videoTitle+'</li>';
@@ -82,16 +129,18 @@ function getVids(dataVid){
 			})
 
 			if (typeof response.nextPageToken == "undefined"){
-				return false;		
+				return false;
 			} else {				
 				$('#results').append("-----------------Next Page-------------");
 				//change DATA
 				var dataTemmp = dataItem;
-				dataItem['pageToken'] = response.nextPageToken;
+				//console.log("response.nextPageToken: " + response.nextPageToken);
+				dataTemmp['pageToken'] = response.nextPageToken;
+				//alert(dataTemmp['pageToken'] );
 				//call again
 				if(getVids(dataTemmp)==false){
 					return false;
-				}	
+				}
 			}	
 		}
 	);
@@ -125,6 +174,33 @@ function getCategoryId(videoId){
 	)
 }
 
+// get video by Id and data
+function getVideoById(videoId, data){
+	$.get(
+		"https://www.googleapis.com/youtube/v3/videos", data,
+		function(data){
+			$.each(data.items, function(i, item){
+				console.log(item);
+
+				videoTitle = item.snippet.title;
+				videoId = videoId;
+				videoImage = item.snippet.thumbnails.high.url;
+				videoGeneral = 'true';	
+				videoCategoryId = item.snippet.categoryId;				
+				
+				video = {
+					categoryId: videoCategoryId,
+					image: videoImage,
+					isGeneral: 'true',
+					title: videoTitle,
+					videoId: videoId 
+				}
+			})
+		}
+	)
+}
+
+// get channel or user id by regex
 function getChannelFromUrl(url) {
 	var pattern = new RegExp('^(?:https?:\/\/)?(?:(?:www|gaming)\.)?youtube\.com\/(?:channel\/|(?:user\/)?)([a-z\-_0-9]+)\/?(?:[\?#]?.*)', 'i');
 	var matches = url.match(pattern);
@@ -136,18 +212,35 @@ function getChannelFromUrl(url) {
 	return url;
   }
 
+// Detect channel link by regex
 function detectChannel(url) {
-var pattern = new RegExp('^(?:https?:\/\/)?(?:(?:www|gaming)\.)?youtube\.com\/(?:channel\/?)([a-z\-_0-9]+)\/?(?:[\?#]?.*)', 'i');
-var matches = url.match(pattern);
+	var pattern = new RegExp('^(?:https?:\/\/)?(?:(?:www|gaming)\.)?youtube\.com\/(?:channel\/?)([a-z\-_0-9]+)\/?(?:[\?#]?.*)', 'i');
+	var matches = url.match(pattern);
 
-if(matches) {
-	return matches[1];
+	if(matches) {
+		return matches[1];
+	}
+
+	return url;
 }
 
-return url;
+// Get playlist id by regex
+function getPlayListFromUrl(url) {
+	var regExp = /^.*(youtu.be\/|list=)([^#\&\?]*).*/;
+	var match = url.match(regExp);
+	if (match && match[2]){
+		return match[2];
+	}
+	return url; 
 }
 
-function submitClick() {
+// get video id by regex
+function getVideoFromUrl(url) {
+	var regExp = /^.*(youtu\.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+	var match = url.match(regExp);
+	if (match && match[2].length == 11) {
+	  return match[2];
+	}
 
-	var firebaseRef = firebase.database().ref("Video");	
+	return url;
 }
