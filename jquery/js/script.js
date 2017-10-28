@@ -122,7 +122,7 @@ function getVids(dataVid){
 				video = {
 					categoryId: '',
 					image: videoImage,
-					isGeneral: 'true',
+					isGeneral: true,
 					title: videoTitle,
 					videoId: videoId ,
 					publishedAt: videoPublishedAt
@@ -134,7 +134,7 @@ function getVids(dataVid){
 				firebaseRef.push().set(video);
 
 				// get CategoryId
-				//getCategoryId(videoId);
+				getCategoryId(videoId);
 
 				//output = '<li><iframe src=\"//www.youtube.com/embed/'+videoId+'\"></iframe></li>';
 				output = '<li>'+videoTitle+'</li>';
@@ -178,10 +178,10 @@ function getCategoryId(videoId){
 
 					video["categoryId"] = videoCategoryId;
 
-					//var query = firebaseRef.orderByChild("videoId").equalTo(videoId);
-					//query.once("child_added", function(snapshot) {
-					  //snapshot.ref.update({ categoryId: videoCategoryId })
-					//});
+					var query = firebaseRef.orderByChild("videoId").equalTo(videoId);
+					query.once("child_added", function(snapshot) {
+					  snapshot.ref.update({ categoryId: videoCategoryId })
+					});
 
 					//console.log(JSON.parse(JSON.stringify(video)));
 				})
@@ -207,7 +207,7 @@ function getVideoById(videoId, data){
 				video = {
 					categoryId: videoCategoryId,
 					image: videoImage,
-					isGeneral: 'true',
+					isGeneral: true,
 					title: videoTitle,
 					videoId: videoId ,
 					publishedAt: videoPublishedAt
