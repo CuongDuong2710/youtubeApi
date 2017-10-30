@@ -2,6 +2,9 @@ var channelName = 'DJASSKICKER';
 var video;
 var dataItem = null;
 var firebaseRef = null;
+var firebaseChannelRef = null;
+var firebaseUsernameRef = null;
+var firebasePlaylistRef = null;
 
 // When submit Channel link
 function submitChannel() {
@@ -12,27 +15,47 @@ function submitChannel() {
 
 	// init firebase
 	firebaseChannelRef = firebase.database().ref("channel");
+	firebaseUsernameRef = firebase.database().ref("username");
 	firebaseRef = firebase.database().ref("video");
 
-
+	// get channel link
 	var channelLink = $("#channelLink").val();
 	var flg = detectChannel(channelLink);
 	var key = getChannelFromUrl(channelLink);
 
 	var data = null;
+	var channel = null;
+	var username = null;
 	if(flg.length == 24) {
+		// if user input channel link
 		data = {
 			part: 'contentDetails',
 			id: key,
 			key: 'AIzaSyDlMX3v-eiC_SLkwuOrpvL19lRpTZbW4fI'
 		};
+		// data channel
+		channel = {
+			id: key,
+			publishedAt: ''
+		};
+		// push to 'channel' branch
+		firebaseChannelRef.push().set(channel);
 	} else {
+		// if user input username link
 		data = {
 			part: 'contentDetails',
 			forUsername: key,
 			key: 'AIzaSyDlMX3v-eiC_SLkwuOrpvL19lRpTZbW4fI'
 		};
+		// data username
+		username = {
+			username: key,
+			publishedAt: ''
+		};
+		// push to 'username' branch
+		firebaseUsernameRef.push().set(username);
 	}
+	// get all uploaded videos of channel
 	getUploadsId(data);
 
 }
@@ -45,8 +68,13 @@ function submitPlaylist() {
 	$('#results').html('');
 
 	// init firebase
+	firebasePlaylistRef = firebase.database().ref("playlist");
 	firebaseRef = firebase.database().ref("video");	
 
+	// playlist data
+	var playlist = null;
+
+	// get playlist link
 	var playlistLink = $('#playlistLink').val();
 	var key = getPlayListFromUrl(playlistLink);
 	//console.log("playlistId: " + key)
@@ -58,6 +86,15 @@ function submitPlaylist() {
 			playlistId: key,
 			key: 'AIzaSyDlMX3v-eiC_SLkwuOrpvL19lRpTZbW4fI'
 		};
+		// data playlist
+		playlist = {
+			playlist: key,
+			publishedAt: ''
+		};
+		// push to 'playlist' branch
+		firebasePlaylistRef.push().set(playlist);
+
+		// get all videos of playlist
 		getVids(dataItem);
 	}
 }
@@ -85,7 +122,7 @@ function submitVideo() {
 	getVideoById(key, data);
 }
 
-// get upload id
+// get all uploaded videos of channel
 function getUploadsId(data) {
 	$.get(
 		"https://www.googleapis.com/youtube/v3/channels", data,
@@ -131,10 +168,10 @@ function getVids(dataVid){
 				//console.log(JSON.parse(JSON.stringify(video)));
 
 				// push data to firebase
-				firebaseRef.push().set(video);
+				//firebaseRef.push().set(video);
 
 				// get CategoryId
-				getCategoryId(videoId);
+				//getCategoryId(videoId);
 
 				//output = '<li><iframe src=\"//www.youtube.com/embed/'+videoId+'\"></iframe></li>';
 				output = '<li>'+videoTitle+'</li>';
@@ -213,6 +250,9 @@ function getVideoById(videoId, data){
 					publishedAt: videoPublishedAt
 				}
 
+				// Append to results listStyleType
+				$('#results').append(output);
+				
 				// push data to firebase
 				firebaseRef.push().set(video);
 			})
