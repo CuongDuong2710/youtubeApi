@@ -26,6 +26,11 @@ function submitChannel() {
 	var data = null;
 	var channel = null;
 	var username = null;
+
+	// get lasted uploaded video data
+	var search = null;
+
+
 	if(flg.length == 24) {
 		// if user input channel link
 		data = {
@@ -33,6 +38,18 @@ function submitChannel() {
 			id: key,
 			key: 'AIzaSyDlMX3v-eiC_SLkwuOrpvL19lRpTZbW4fI'
 		};
+
+		// get lasted uploaded video of channel
+		search = {
+			part: 'snippet',
+			channelId: key,
+			maxResults: 1,
+			order: 'date',
+			type: 'video',
+			key: 'AIzaSyDlMX3v-eiC_SLkwuOrpvL19lRpTZbW4fI'
+		}
+		var publishedAt = getLastedUploadedVideo(search);
+
 		// data channel
 		channel = {
 			id: key,
@@ -199,7 +216,7 @@ function getVids(dataVid){
 	return false;
 }
 
-
+// get category of video
 function getCategoryId(videoId){
 	//console.log("videoId: ", videoId);
 	$.get(
@@ -250,6 +267,8 @@ function getVideoById(videoId, data){
 					publishedAt: videoPublishedAt
 				}
 
+				// output
+				output = '<li>'+videoTitle+'</li>';
 				// Append to results listStyleType
 				$('#results').append(output);
 				
@@ -258,6 +277,23 @@ function getVideoById(videoId, data){
 			})
 		}
 	)
+}
+
+// get lasted uploaded video
+function getLastedUploadedVideo(data){
+	var lastedPublishedAt = '';
+	$.get(
+		"https://www.googleapis.com/youtube/v3/search", data,
+		function(data){
+			$.each(data.items, function(i, item){
+				console.log(item);
+
+				lastedPublishedAt = item.snippet.publishedAt;
+				alert(lastedPublishedAt);
+			})
+		}
+	)
+	return lastedPublishedAt;
 }
 
 // get channel or user id by regex
