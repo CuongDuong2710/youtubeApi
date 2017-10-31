@@ -6,6 +6,8 @@ var firebaseChannelRef = null;
 var firebaseUsernameRef = null;
 var firebasePlaylistRef = null;
 var flg = null;
+// channel data
+var channel = null;
 // username data
 var username = null;
 // flag user input playlist link
@@ -29,43 +31,49 @@ function submitChannel() {
 	var key = getChannelFromUrl(channelLink);
 
 	var data = null;
-	var channel = null;
-
+	
 	// get lasted uploaded video data
 	var search = null;
 
 
-	if(flg.length == 24) {
+	if(flg.length == 24) { // if user input channel link
 
 		firebaseChannelRef = firebase.database().ref("channel");
 
-		// if user input channel link
-		data = {
-			part: 'contentDetails',
-			id: key,
-			key: 'AIzaSyDlMX3v-eiC_SLkwuOrpvL19lRpTZbW4fI'
-		};
+		var query = firebaseChannelRef.orderByChild("id").equalTo(key).once("value", snapshot =>{
+			var isChannelExist = snapshot.val();
+			console.log("isChannelExist", isChannelExist);
+			if (isChannelExist) {
+				console.log("channel exists");
+			} else {
+				console.log("channel does not exist");
+				// data channel
+				channel = {
+				id: key,
+				publishedAt: ''
+				};
 
-		// data channel
-		channel = {
-			id: key,
-			publishedAt: ''
-		};
+				// searching to get lasted uploaded video of channel
+				data = {
+					part: 'contentDetails',
+					id: key,
+					key: 'AIzaSyDlMX3v-eiC_SLkwuOrpvL19lRpTZbW4fI'
+				};
+				
+				search = {
+					part: 'snippet',
+					channelId: key,
+					maxResults: 1,
+					order: 'date',
+					type: 'video',
+					key: 'AIzaSyDlMX3v-eiC_SLkwuOrpvL19lRpTZbW4fI'
+				};
 
-		// push to 'channel' branch
-		firebaseChannelRef.push().set(channel);
-
-		// get lasted uploaded video of channel
-		search = {
-			part: 'snippet',
-			channelId: key,
-			maxResults: 1,
-			order: 'date',
-			type: 'video',
-			key: 'AIzaSyDlMX3v-eiC_SLkwuOrpvL19lRpTZbW4fI'
-		}
-		getLastedUploadedVideo(search, key);
-	} else {
+				getLastedUploadedVideo(search, key);
+			}
+		});
+		
+	} else { // if user input username link
 
 		firebaseUsernameRef = firebase.database().ref("username");
 		// data username
@@ -82,7 +90,7 @@ function submitChannel() {
 		};
 	}
 	// get all uploaded videos of channel
-	getUploadsId(data, key);
+	//getUploadsId(data, key);
 
 }
 
@@ -105,20 +113,32 @@ function submitPlaylist() {
 	var key = getPlayListFromUrl(playlistLink);
 	//console.log("playlistId: " + key)
 
+	// flag check exists
+	var isPlaylistExist = null;
+
 	if(key != null) {
-		dataItem = {
-			part: 'snippet',
-			maxResults: 50,
-			playlistId: key,
-			key: 'AIzaSyDlMX3v-eiC_SLkwuOrpvL19lRpTZbW4fI'
-		};
-		// data playlist
-		playlist = {
-			playlist: key,
-			publishedAt: ''
-		};
-		// get all videos of playlist
-		getVids(dataItem);
+		var query = firebasePlaylistRef.orderByChild("playlist").equalTo(key).once("value", snapshot => {
+			isPlaylistExist = snapshot.val();
+
+			if (isPlaylistExist) { // if playlist exist
+				console.log("exists");
+			} else { // if playlist does not exist
+				console.log("not exists");
+				dataItem = {
+					part: 'snippet',
+					maxResults: 50,
+					playlistId: key,
+					key: 'AIzaSyDlMX3v-eiC_SLkwuOrpvL19lRpTZbW4fI'
+				};
+				// data playlist
+				playlist = {
+					playlist: key,
+					publishedAt: ''
+				};
+				// get all videos of playlist
+				getVids(dataItem);
+			}
+		});
 	}
 }
 
@@ -308,13 +328,11 @@ function getLastedUploadedVideo(data, key){
 		function(data){
 			$.each(data.items, function(i, item){
 				lastedPublishedAt = item.snippet.publishedAt;
+				
+				channel["publishedAt"] = Date.parse(lastedPublishedAt);
+				
+				firebaseChannelRef.push().set(channel);
 			})
-
-			// updated publishedAt of channel
-			var query = firebaseChannelRef.orderByChild("id").equalTo(key);
-			query.once("child_added", function(snapshot) {
-			  snapshot.ref.update({ publishedAt: Date.parse(lastedPublishedAt) })
-			});
 		}
 	)
 }
