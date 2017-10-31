@@ -5,6 +5,7 @@ var firebaseRef = null;
 var firebaseChannelRef = null;
 var firebaseUsernameRef = null;
 var firebasePlaylistRef = null;
+var flg = null;
 
 // When submit Channel link
 function submitChannel() {
@@ -18,7 +19,7 @@ function submitChannel() {
 
 	// get channel link
 	var channelLink = $("#channelLink").val();
-	var flg = detectChannel(channelLink);
+	flg = detectChannel(channelLink);
 	var key = getChannelFromUrl(channelLink);
 
 	var data = null;
@@ -46,6 +47,9 @@ function submitChannel() {
 			publishedAt: ''
 		};
 
+		// push to 'channel' branch
+		//firebaseChannelRef.push().set(channel);
+
 		// get lasted uploaded video of channel
 		search = {
 			part: 'snippet',
@@ -55,21 +59,10 @@ function submitChannel() {
 			type: 'video',
 			key: 'AIzaSyDlMX3v-eiC_SLkwuOrpvL19lRpTZbW4fI'
 		}
-		getLastedUploadedVideo(search, key);
-
-		
-		// push to 'channel' branch
-		firebaseChannelRef.push().set(channel);
+		//getLastedUploadedVideo(search, key);
 	} else {
 
 		firebaseUsernameRef = firebase.database().ref("username");
-
-		// if user input username link
-		data = {
-			part: 'contentDetails',
-			forUsername: key,
-			key: 'AIzaSyDlMX3v-eiC_SLkwuOrpvL19lRpTZbW4fI'
-		};
 		// data username
 		username = {
 			username: key,
@@ -77,6 +70,13 @@ function submitChannel() {
 		};
 		// push to 'username' branch
 		firebaseUsernameRef.push().set(username);
+
+		// if user input username link
+		data = {
+			part: 'contentDetails',
+			forUsername: key,
+			key: 'AIzaSyDlMX3v-eiC_SLkwuOrpvL19lRpTZbW4fI'
+		};
 	}
 	// get all uploaded videos of channel
 	getUploadsId(data);
@@ -166,7 +166,7 @@ function getUploadsId(data) {
 }
 
 // get all video of channels
-function getVids(dataVid){
+function getVids(dataVid, key){
 	$.get(
 	"https://www.googleapis.com/youtube/v3/playlistItems", dataVid,
 		function(response){
@@ -191,10 +191,10 @@ function getVids(dataVid){
 				//console.log(JSON.parse(JSON.stringify(video)));
 
 				// push data to firebase
-				firebaseRef.push().set(video);
+				//firebaseRef.push().set(video);
 
 				// get CategoryId
-				getCategoryId(videoId);
+				//getCategoryId(videoId);
 
 				//output = '<li><iframe src=\"//www.youtube.com/embed/'+videoId+'\"></iframe></li>';
 				output = '<li>'+videoTitle+'</li>';
