@@ -14,8 +14,6 @@ function submitChannel() {
 	$('#results').html('');
 
 	// init firebase
-	firebaseChannelRef = firebase.database().ref("channel");
-	firebaseUsernameRef = firebase.database().ref("username");
 	firebaseRef = firebase.database().ref("video");
 
 	// get channel link
@@ -32,11 +30,20 @@ function submitChannel() {
 
 
 	if(flg.length == 24) {
+
+		firebaseChannelRef = firebase.database().ref("channel");
+
 		// if user input channel link
 		data = {
 			part: 'contentDetails',
 			id: key,
 			key: 'AIzaSyDlMX3v-eiC_SLkwuOrpvL19lRpTZbW4fI'
+		};
+
+		// data channel
+		channel = {
+			id: key,
+			publishedAt: ''
 		};
 
 		// get lasted uploaded video of channel
@@ -48,16 +55,15 @@ function submitChannel() {
 			type: 'video',
 			key: 'AIzaSyDlMX3v-eiC_SLkwuOrpvL19lRpTZbW4fI'
 		}
-		var publishedAt = getLastedUploadedVideo(search);
+		getLastedUploadedVideo(search, key);
 
-		// data channel
-		channel = {
-			id: key,
-			publishedAt: ''
-		};
+		
 		// push to 'channel' branch
 		firebaseChannelRef.push().set(channel);
 	} else {
+
+		firebaseUsernameRef = firebase.database().ref("username");
+
 		// if user input username link
 		data = {
 			part: 'contentDetails',
@@ -185,10 +191,10 @@ function getVids(dataVid){
 				//console.log(JSON.parse(JSON.stringify(video)));
 
 				// push data to firebase
-				//firebaseRef.push().set(video);
+				firebaseRef.push().set(video);
 
 				// get CategoryId
-				//getCategoryId(videoId);
+				getCategoryId(videoId);
 
 				//output = '<li><iframe src=\"//www.youtube.com/embed/'+videoId+'\"></iframe></li>';
 				output = '<li>'+videoTitle+'</li>';
@@ -230,8 +236,7 @@ function getCategoryId(videoId){
 					videoCategoryId = item.snippet.categoryId;
 					//console.log("videoCategoryId: ", videoCategoryId);
 
-					video["categoryId"] = videoCategoryId;
-
+					// updated categoryId of videoId
 					var query = firebaseRef.orderByChild("videoId").equalTo(videoId);
 					query.once("child_added", function(snapshot) {
 					  snapshot.ref.update({ categoryId: videoCategoryId })
@@ -279,21 +284,23 @@ function getVideoById(videoId, data){
 	)
 }
 
+var lastedPublishedAt = '';
 // get lasted uploaded video
-function getLastedUploadedVideo(data){
-	var lastedPublishedAt = '';
+function getLastedUploadedVideo(data, key){
 	$.get(
 		"https://www.googleapis.com/youtube/v3/search", data,
 		function(data){
 			$.each(data.items, function(i, item){
-				console.log(item);
-
 				lastedPublishedAt = item.snippet.publishedAt;
-				alert(lastedPublishedAt);
 			})
+
+			// updated publishedAt of channel
+			var query = firebaseChannelRef.orderByChild("id").equalTo(key);
+			query.once("child_added", function(snapshot) {
+			  snapshot.ref.update({ publishedAt: lastedPublishedAt })
+			});
 		}
 	)
-	return lastedPublishedAt;
 }
 
 // get channel or user id by regex
