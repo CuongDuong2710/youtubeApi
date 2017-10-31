@@ -41,12 +41,15 @@ function submitChannel() {
 		firebaseChannelRef = firebase.database().ref("channel");
 
 		var query = firebaseChannelRef.orderByChild("id").equalTo(key).once("value", snapshot =>{
+
 			var isChannelExist = snapshot.val();
-			console.log("isChannelExist", isChannelExist);
+
 			if (isChannelExist) {
 				console.log("channel exists");
+				// TODO: get publishAt and compare
 			} else {
 				console.log("channel does not exist");
+
 				// data channel
 				channel = {
 				id: key,
@@ -71,27 +74,41 @@ function submitChannel() {
 
 				getLastedUploadedVideo(search, key);
 			}
+			// get all uploaded videos of channel
+			console.log("data: ", data);
+			getUploadsId(data, key);
 		});
-		
 	} else { // if user input username link
 
 		firebaseUsernameRef = firebase.database().ref("username");
-		// data username
-		username = {
-			username: key,
-			publishedAt: ''
-		};
 
-		// if user input username link
-		data = {
-			part: 'contentDetails',
-			forUsername: key,
-			key: 'AIzaSyDlMX3v-eiC_SLkwuOrpvL19lRpTZbW4fI'
-		};
+		var query = firebaseUsernameRef.orderByChild("username").equalTo(key).once("value", snapshot =>{
+
+			var isUsernameExist = snapshot.val();
+			console.log("isUsernameExist", isUsernameExist);
+
+			if (isUsernameExist) {
+				console.log("username exists");
+			} else {
+				console.log("username does not exists");
+
+				data = {
+					part: 'contentDetails',
+					forUsername: key,
+					key: 'AIzaSyDlMX3v-eiC_SLkwuOrpvL19lRpTZbW4fI'
+				};
+
+				// data username
+				username = {
+					username: key,
+					publishedAt: ''
+				};
+			}
+			// get all uploaded videos of channel
+			console.log("data: ", data);
+			getUploadsId(data, key);
+		});
 	}
-	// get all uploaded videos of channel
-	//getUploadsId(data, key);
-
 }
 
 // When submit Playlist link
@@ -171,14 +188,16 @@ function getUploadsId(data, key) {
 		"https://www.googleapis.com/youtube/v3/channels", data,
 			function(data){
 				$.each(data.items, function(i, item){
-					console.log(item);
+
 					pid = item.contentDetails.relatedPlaylists.uploads;
+
 					dataItem = {
 						part: 'snippet',
 						maxResults: 50,
 						playlistId: pid,
 						key: 'AIzaSyDlMX3v-eiC_SLkwuOrpvL19lRpTZbW4fI'
 					};
+
 					getVids(dataItem, key);
 				})
 			}
@@ -191,13 +210,16 @@ function getVids(dataVid, key){
 	$.get(
 	"https://www.googleapis.com/youtube/v3/playlistItems", dataVid,
 		function(response){
+
 			var output;
+
 			$.each(response.items, function(i, item){
 
 				if (flg !== null && flg.length !== 24 && i === 0) { // if user input forUsername
 					count ++;
 					// update
 					username["publishedAt"] = Date.parse(item.snippet.publishedAt);
+
 					if (count === 1) {
 						// push at first child
 						firebaseUsernameRef.push().set(username);
@@ -327,6 +349,7 @@ function getLastedUploadedVideo(data, key){
 		"https://www.googleapis.com/youtube/v3/search", data,
 		function(data){
 			$.each(data.items, function(i, item){
+
 				lastedPublishedAt = item.snippet.publishedAt;
 				
 				channel["publishedAt"] = Date.parse(lastedPublishedAt);
