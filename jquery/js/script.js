@@ -6,7 +6,12 @@ var firebaseChannelRef = null;
 var firebaseUsernameRef = null;
 var firebasePlaylistRef = null;
 var flg = null;
+// username data
 var username = null;
+// flag user input playlist link
+var flgPlaylist = null;
+// playlist data
+var playlist = null;
 
 // When submit Channel link
 function submitChannel() {
@@ -85,15 +90,15 @@ function submitChannel() {
 function submitPlaylist() {
 	//initial
 	dataItem = null;
+	
+	flgPlaylist = 1;
+
 	// clear
 	$('#results').html('');
 
 	// init firebase
 	firebasePlaylistRef = firebase.database().ref("playlist");
 	firebaseRef = firebase.database().ref("video");	
-
-	// playlist data
-	var playlist = null;
 
 	// get playlist link
 	var playlistLink = $('#playlistLink').val();
@@ -112,9 +117,6 @@ function submitPlaylist() {
 			playlist: key,
 			publishedAt: ''
 		};
-		// push to 'playlist' branch
-		firebasePlaylistRef.push().set(playlist);
-
 		// get all videos of playlist
 		getVids(dataItem);
 	}
@@ -172,12 +174,19 @@ function getVids(dataVid, key){
 			var output;
 			$.each(response.items, function(i, item){
 
-				if (flg.length !== 24 && i === 0) {
+				if (flg !== null && flg.length !== 24 && i === 0) { // if user input forUsername
 					count ++;
+					// update
 					username["publishedAt"] = Date.parse(item.snippet.publishedAt);
 					if (count === 1) {
+						// push at first child
 						firebaseUsernameRef.push().set(username);
 					}
+				}
+
+				if (flgPlaylist != null && flgPlaylist === 1 && i ===0) { // if user input playlist link
+					playlist["publishedAt"] = Date.parse(item.snippet.publishedAt);
+					firebasePlaylistRef.push().set(playlist);
 				}
 
 				videoTitle = item.snippet.title;
