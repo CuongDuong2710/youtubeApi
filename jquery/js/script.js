@@ -48,7 +48,7 @@ function submitChannel() {
 		};
 
 		// push to 'channel' branch
-		//firebaseChannelRef.push().set(channel);
+		firebaseChannelRef.push().set(channel);
 
 		// get lasted uploaded video of channel
 		search = {
@@ -59,7 +59,7 @@ function submitChannel() {
 			type: 'video',
 			key: 'AIzaSyDlMX3v-eiC_SLkwuOrpvL19lRpTZbW4fI'
 		}
-		//getLastedUploadedVideo(search, key);
+		getLastedUploadedVideo(search, key);
 	} else {
 
 		firebaseUsernameRef = firebase.database().ref("username");
@@ -77,6 +77,7 @@ function submitChannel() {
 			forUsername: key,
 			key: 'AIzaSyDlMX3v-eiC_SLkwuOrpvL19lRpTZbW4fI'
 		};
+		//getLastedUploadedVideoFromUsername(data);
 	}
 	// get all uploaded videos of channel
 	getUploadsId(data);
@@ -163,6 +164,41 @@ function getUploadsId(data) {
 				})
 			}
 	);
+}
+
+function getLastedUploadedVideoFromUsername(data) {
+	$.get(
+		"https://www.googleapis.com/youtube/v3/channels", data,
+			function(data){
+				$.each(data.items, function(i, item){
+					console.log(item);
+					pid = item.contentDetails.relatedPlaylists.uploads;
+					dataItem = {
+						part: 'snippet',
+						maxResults: 1,
+						playlistId: pid,
+						key: 'AIzaSyDlMX3v-eiC_SLkwuOrpvL19lRpTZbW4fI'
+					};
+					getPublishAtFromUsername(dataItem, data["forUsername"]);
+				})
+			}
+	);
+}
+
+function getPublishAtFromUsername(dataItem, key) {
+	$.get(
+		"https://www.googleapis.com/youtube/v3/playlistItems", dataItem,
+			function(response){
+				var output;
+				$.each(response.items, function(i, item){
+					// updated publishedAt of username
+					var query = firebaseUsernameRef.orderByChild("username").equalTo(key);
+					query.once("child_added", function(snapshot) {
+					  snapshot.ref.update({ publishedAt: item.snippet.publishedAt })
+					});
+				}
+			)}
+		);
 }
 
 // get all video of channels
@@ -297,7 +333,7 @@ function getLastedUploadedVideo(data, key){
 			// updated publishedAt of channel
 			var query = firebaseChannelRef.orderByChild("id").equalTo(key);
 			query.once("child_added", function(snapshot) {
-			  snapshot.ref.update({ publishedAt: lastedPublishedAt })
+			  snapshot.ref.update({ publishedAt: Date.parse(lastedPublishedAt) })
 			});
 		}
 	)
