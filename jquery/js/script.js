@@ -43,10 +43,18 @@ function submitChannel() {
 		var query = firebaseChannelRef.orderByChild("id").equalTo(key).once("value", snapshot =>{
 
 			var isChannelExist = snapshot.val();
+			console.log("isChannelExist: ", isChannelExist);
 
 			if (isChannelExist) {
-				console.log("channel exists");
 				// TODO: get publishAt and compare
+				snapshot.forEach(function (childSnapshot){
+					var value = childSnapshot.val();
+					var publishedAt = value.publishedAt;
+					console.log("publishedAt: ", value.publishedAt);
+
+					
+				})
+				
 			} else {
 				console.log("channel does not exist");
 
@@ -76,7 +84,7 @@ function submitChannel() {
 			}
 			// get all uploaded videos of channel
 			console.log("data: ", data);
-			getUploadsId(data, key);
+			//getUploadsId(data, key);
 		});
 	} else { // if user input username link
 
