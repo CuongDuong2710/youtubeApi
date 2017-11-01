@@ -15,7 +15,9 @@ var flgPlaylist = null;
 // playlist data
 var playlist = null;
 
-// When submit Channel link
+/**
+ * Pressing submit channel button
+ */
 function submitChannel() {
 	//initial
 	dataItem = null;
@@ -52,18 +54,19 @@ function submitChannel() {
 			var isChannelExist = snapshot.val();
 			console.log("isChannelExist: ", isChannelExist);
 
-			if (isChannelExist) {
+			if (isChannelExist) { // if channel exists -> uploading only new videos by compare publishedAt
 				console.log("channel exist");
-				// TODO: get publishAt and compare
+				// get publishAt and compare
 				snapshot.forEach(function (childSnapshot) {
 					var value = childSnapshot.val();
 					var publishedAt = value.publishedAt;
 					console.log("publishedAt: ", value.publishedAt);
 
+					// checking channel has new video
 					checkAndGetNewVideo(data, publishedAt, key);
 				})
 
-			} else {
+			} else { // if channel does not exist -> uploading all videos
 				console.log("channel does not exist");
 
 				// data channel
@@ -81,7 +84,9 @@ function submitChannel() {
 					key: 'AIzaSyDlMX3v-eiC_SLkwuOrpvL19lRpTZbW4fI'
 				};
 
+				// get lasted time of channel
 				getLastedUploadedVideo(search, key);
+
 				// get all uploaded videos of channel
 				console.log("data: ", data);
 				getUploadsId(data, key);
@@ -120,6 +125,12 @@ function submitChannel() {
 	}
 }
 
+/**
+ * Checking channel has new video
+ * @param {*} data 
+ * @param {*} publishedAt 
+ * @param {*} key 
+ */
 function checkAndGetNewVideo(data, publishedAt, key) {
 	$.get(
 		"https://www.googleapis.com/youtube/v3/channels", data,
@@ -141,6 +152,12 @@ function checkAndGetNewVideo(data, publishedAt, key) {
 	);
 }
 
+/**
+ * Checking if channel has new video, push to firebase
+ * @param {*} dataItem 
+ * @param {*} publishedAt 
+ * @param {*} key 
+ */
 function checkNewVideo(dataItem, publishedAt, key) {
 	$.get(
 		"https://www.googleapis.com/youtube/v3/playlistItems", dataItem,
@@ -217,7 +234,9 @@ function checkNewVideo(dataItem, publishedAt, key) {
 	);
 }
 
-// When submit Playlist link
+/**
+ * Pressing submit playlist button
+ */
 function submitPlaylist() {
 	//initial
 	dataItem = null;
@@ -265,7 +284,9 @@ function submitPlaylist() {
 	}
 }
 
-// When submit Video link
+/**
+ * Pressing submit video button
+ */
 function submitVideo() {
 	// clear
 	$('#results').html('');
@@ -288,7 +309,11 @@ function submitVideo() {
 	getVideoById(key, data);
 }
 
-// get all uploaded videos of channel
+/**
+ * Sending playlistId to playlistItems
+ * @param {*} data 
+ * @param {*} key 
+ */
 function getUploadsId(data, key) {
 	$.get(
 		"https://www.googleapis.com/youtube/v3/channels", data,
@@ -310,8 +335,10 @@ function getUploadsId(data, key) {
 	);
 }
 
+/**
+ * Getting all videos of channel
+ */
 var count = 0;
-// get all video of channels
 function getVids(dataVid, key) {
 	$.get(
 		"https://www.googleapis.com/youtube/v3/playlistItems", dataVid,
@@ -386,7 +413,10 @@ function getVids(dataVid, key) {
 	return false;
 }
 
-// get category of video
+/**
+ * Getting categoryId of each video
+ * @param {*} videoId 
+ */
 function getCategoryId(videoId) {
 	//console.log("videoId: ", videoId);
 	$.get(
@@ -413,7 +443,11 @@ function getCategoryId(videoId) {
 	)
 }
 
-// get video by Id and data
+/**
+ * Getting video by id
+ * @param {*} videoId 
+ * @param {*} data 
+ */
 function getVideoById(videoId, data) {
 	$.get(
 		"https://www.googleapis.com/youtube/v3/videos", data,
@@ -449,8 +483,10 @@ function getVideoById(videoId, data) {
 	)
 }
 
+/**
+ * Getting lasted uploading video
+ */
 var lastedPublishedAt = '';
-// get lasted uploaded video
 function getLastedUploadedVideo(data, key) {
 	$.get(
 		"https://www.googleapis.com/youtube/v3/search", data,
