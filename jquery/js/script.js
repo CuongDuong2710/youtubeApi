@@ -422,15 +422,29 @@ function submitVideo() {
 	var key = getVideoFromUrl(videoLink);
 
 	var data = null;
+
+	var isVideoExist = null;
+
 	if (key !== null) {
+
 		data = {
 			part: 'snippet',
 			id: key,
 			key: 'AIzaSyDlMX3v-eiC_SLkwuOrpvL19lRpTZbW4fI'
 		};
-	}
 
-	getVideoById(key, data);
+		var query = firebaseRef.orderByChild("videoId").equalTo(key).once("value", snapshot => {
+
+			isVideoExist = snapshot.val();
+
+			if (isVideoExist) {
+				console.log("Video exists");
+			} else {
+				console.log("Video does not exists");
+				getVideoById(key, data);
+			}
+		});
+	}
 }
 
 /**
