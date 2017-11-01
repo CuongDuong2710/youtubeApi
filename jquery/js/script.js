@@ -229,26 +229,26 @@ function checkNewVideo(dataItem, publishedAt, key) {
 				//console.log(JSON.parse(JSON.stringify(video)));
 
 				// push data to firebase
-				//firebaseRef.push().set(video);
+				firebaseRef.push().set(video);
 
 				// get CategoryId
-				//getCategoryId(videoId);
-
-				/* if (typeof response.nextPageToken == "undefined"){
-					return false;
-				} else {				
-					$('#results').append("-----------------Next Page-------------");
-					//change DATA
-					var dataTemmp = dataItem;
-					//console.log("response.nextPageToken: " + response.nextPageToken);
-					dataTemmp['pageToken'] = response.nextPageToken;
-					//alert(dataTemmp['pageToken'] );
-					//call again
-					if(checkNewVideo(dataTemmp, publishedAt)==false){
-						return false;
-					}
-				}	 */
+				getCategoryId(videoId);
 			})
+			
+			if (typeof response.nextPageToken == "undefined"){
+				return false;
+			} else {				
+				$('#results').append("-----------------Next Page-------------");
+				//change DATA
+				var dataTemmp = dataItem;
+				//console.log("response.nextPageToken: " + response.nextPageToken);
+				dataTemmp['pageToken'] = response.nextPageToken;
+				//alert(dataTemmp['pageToken'] );
+				//call again
+				if(checkNewVideo(dataTemmp, publishedAt, key)==false){
+					return false;
+				}
+			}
 		}
 	);
 }
@@ -401,10 +401,10 @@ function getVids(dataVid, key) {
 				//console.log(JSON.parse(JSON.stringify(video)));
 
 				// push data to firebase
-				//firebaseRef.push().set(video);
+				firebaseRef.push().set(video);
 
 				// get CategoryId
-				//getCategoryId(videoId);
+				getCategoryId(videoId);
 
 				//output = '<li><iframe src=\"//www.youtube.com/embed/'+videoId+'\"></iframe></li>';
 				output = '<li>' + videoTitle + '</li>';
