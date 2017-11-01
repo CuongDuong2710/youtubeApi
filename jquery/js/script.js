@@ -278,19 +278,30 @@ function submitPlaylist() {
 	var isPlaylistExist = null;
 
 	if (key != null) {
+
+		dataItem = {
+			part: 'snippet',
+			maxResults: 50,
+			playlistId: key,
+			key: 'AIzaSyDlMX3v-eiC_SLkwuOrpvL19lRpTZbW4fI'
+		};
+
 		var query = firebasePlaylistRef.orderByChild("playlist").equalTo(key).once("value", snapshot => {
 			isPlaylistExist = snapshot.val();
 
 			if (isPlaylistExist) { // if playlist exist
-				console.log("exists");
+				console.log("playlist exists");
+
+				snapshot.forEach(function (childSnapshot) {
+					var value = childSnapshot.val();
+					var publishedAt = value.publishedAt;
+
+					// checking playlist has new video
+					checkAndGetNewPlaylist(dataItem, publishedAt, key);
+				})
 			} else { // if playlist does not exist
-				console.log("not exists");
-				dataItem = {
-					part: 'snippet',
-					maxResults: 50,
-					playlistId: key,
-					key: 'AIzaSyDlMX3v-eiC_SLkwuOrpvL19lRpTZbW4fI'
-				};
+				console.log("playlist does not exist");
+				
 				// data playlist
 				playlist = {
 					playlist: key,
@@ -301,6 +312,100 @@ function submitPlaylist() {
 			}
 		});
 	}
+}
+
+/**
+ * Checking new video of playlist
+ * @param {*} dataItem 
+ * @param {*} publishedAt 
+ * @param {*} key 
+ */
+function checkAndGetNewPlaylist(dataItem, publishedAt, key) {
+	$.get(
+		"https://www.googleapis.com/youtube/v3/playlistItems", dataItem,
+		function (response) {
+
+			var output;
+
+			// sorting array by decreasing
+			var array = response.items.sort(function(a,b){
+				var keyA = new Date(a.snippet.publishedAt);
+				var keyB = new Date(b.snippet.publishedAt);
+				// Compare the 2 dates
+				if (keyA > keyB) return -1;
+				if (keyA < keyB) return 1;
+				return 0;
+			});
+
+			$.each(array, function (i, item) {
+
+
+				var videoPublishedAtTimeStamp = Date.parse(item.snippet.publishedAt);
+				console.log("videoTitle:", item.snippet.title);
+				console.log("item.snippet.publishedAt:", item.snippet.publishedAt);
+				console.log("videoPublishedAtTimeStamp:", videoPublishedAtTimeStamp);
+				console.log("publishedAt:", publishedAt);
+
+				if (videoPublishedAtTimeStamp <= publishedAt) { // if video is older, exit function
+					console.log("videoPublishedAtTimeStamp <= publishedAt:", videoPublishedAtTimeStamp <= publishedAt);
+					console.log("older---");
+					return false;
+				} else { // if video is new, get and upload to firebase
+					console.log("videoPublishedAtTimeStamp > publishedAt:", videoPublishedAtTimeStamp > publishedAt);
+					console.log("newer---");
+					videoTitle = item.snippet.title;
+					videoId = item.snippet.resourceId.videoId;
+					videoImage = item.snippet.thumbnails.high.url;
+					videoGeneral = 'true';
+					videoPublishedAt = item.snippet.publishedAt;
+
+					video = {
+						categoryId: '',
+						image: videoImage,
+						isGeneral: true,
+						title: videoTitle,
+						videoId: videoId,
+						publishedAt: videoPublishedAt
+					}
+
+					// updated 'publishedAt' of playlist branch
+					var query = firebasePlaylistRef.orderByChild("playlist").equalTo(key);
+					query.once("child_added", function (snapshot) {
+						snapshot.ref.update({ publishedAt: videoPublishedAtTimeStamp })
+					});
+					
+					//output = '<li><iframe src=\"//www.youtube.com/embed/'+videoId+'\"></iframe></li>';
+					output = '<li>' + videoTitle + '</li>';
+
+					// Append to results listStyleType
+					$('#results').append(output);
+				}
+
+				//console.log(JSON.parse(JSON.stringify(video)));
+
+				// push data to firebase
+				//firebaseRef.push().set(video);
+
+				// get CategoryId
+				//getCategoryId(videoId);
+			})
+			
+			/* if (typeof response.nextPageToken == "undefined"){
+				return false;
+			} else {				
+				$('#results').append("-----------------Next Page-------------");
+				//change DATA
+				var dataTemmp = dataItem;
+				//console.log("response.nextPageToken: " + response.nextPageToken);
+				dataTemmp['pageToken'] = response.nextPageToken;
+				//alert(dataTemmp['pageToken'] );
+				//call again
+				if(checkNewVideo(dataTemmp, publishedAt, key)==false){
+					return false;
+				}
+			} */
+		}
+	);
 }
 
 /**
@@ -365,6 +470,15 @@ function getVids(dataVid, key) {
 
 			var output;
 
+			var array = response.items.sort(function(a,b){
+				var keyA = new Date(a.snippet.publishedAt);
+				var keyB = new Date(b.snippet.publishedAt);
+				// Compare the 2 dates
+				if (keyA > keyB) return -1;
+				if (keyA < keyB) return 1;
+				return 0;
+			});
+
 			$.each(response.items, function (i, item) {
 
 				if (flg !== null && flg.length !== 24 && i === 0) { // if user input forUsername
@@ -379,8 +493,12 @@ function getVids(dataVid, key) {
 				}
 
 				if (flgPlaylist != null && flgPlaylist === 1 && i === 0) { // if user input playlist link
-					playlist["publishedAt"] = Date.parse(item.snippet.publishedAt);
-					firebasePlaylistRef.push().set(playlist);
+					$.each(array, function(j, arr) { // push lasted publishedAt at playlist branch
+						console.log("playlist['publishedAt']", arr.snippet.publishedAt);
+						playlist["publishedAt"] = Date.parse(item.snippet.publishedAt);
+						firebasePlaylistRef.push().set(playlist);
+						return false;
+					})
 				}
 
 				videoTitle = item.snippet.title;
