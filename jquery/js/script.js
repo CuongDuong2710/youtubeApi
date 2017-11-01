@@ -384,13 +384,13 @@ function checkAndGetNewPlaylist(dataItem, publishedAt, key) {
 				//console.log(JSON.parse(JSON.stringify(video)));
 
 				// push data to firebase
-				//firebaseRef.push().set(video);
+				firebaseRef.push().set(video);
 
 				// get CategoryId
-				//getCategoryId(videoId);
+				getCategoryId(videoId);
 			})
 			
-			/* if (typeof response.nextPageToken == "undefined"){
+			if (typeof response.nextPageToken == "undefined"){
 				return false;
 			} else {				
 				$('#results').append("-----------------Next Page-------------");
@@ -403,7 +403,7 @@ function checkAndGetNewPlaylist(dataItem, publishedAt, key) {
 				if(checkNewVideo(dataTemmp, publishedAt, key)==false){
 					return false;
 				}
-			} */
+			}
 		}
 	);
 }
