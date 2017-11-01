@@ -42,7 +42,6 @@ function submitChannel() {
 
 		firebaseChannelRef = firebase.database().ref("channel");
 
-		// searching to get lasted uploaded video of channel
 		data = {
 			part: 'contentDetails',
 			id: key,
@@ -96,31 +95,44 @@ function submitChannel() {
 
 		firebaseUsernameRef = firebase.database().ref("username");
 
+		data = {
+			part: 'contentDetails',
+			forUsername: key,
+			key: 'AIzaSyDlMX3v-eiC_SLkwuOrpvL19lRpTZbW4fI'
+		};
+
 		var query = firebaseUsernameRef.orderByChild("username").equalTo(key).once("value", snapshot => {
 
 			var isUsernameExist = snapshot.val();
 			console.log("isUsernameExist", isUsernameExist);
 
-			if (isUsernameExist) {
+			if (isUsernameExist) { // if channel exists -> uploading only new videos by compare publishedAt
 				console.log("username exists");
-			} else {
-				console.log("username does not exists");
 
-				data = {
-					part: 'contentDetails',
-					forUsername: key,
-					key: 'AIzaSyDlMX3v-eiC_SLkwuOrpvL19lRpTZbW4fI'
-				};
+				// get publishAt and compare
+				snapshot.forEach(function (childSnapshot) {
+					var value = childSnapshot.val();
+					var publishedAt = value.publishedAt;
+					console.log("publishedAt: ", value.publishedAt);
+
+					// checking channel has new video
+					checkAndGetNewVideo(data, publishedAt, key);
+				})
+
+			} else { // if channel does not exist -> uploading all videos
+				console.log("username does not exists");
 
 				// data username
 				username = {
 					username: key,
 					publishedAt: ''
 				};
+
+				// get all uploaded videos of channel
+				console.log("data: ", data);
+				getUploadsId(data, key);
 			}
-			// get all uploaded videos of channel
-			console.log("data: ", data);
-			getUploadsId(data, key);
+			
 		});
 	}
 }
@@ -194,11 +206,18 @@ function checkNewVideo(dataItem, publishedAt, key) {
 						publishedAt: videoPublishedAt
 					}
 
-					// updated 'publishedAt' of channel branch
-					var query = firebaseChannelRef.orderByChild("id").equalTo(key);
-					query.once("child_added", function (snapshot) {
-						snapshot.ref.update({ publishedAt: videoPublishedAtTimeStamp })
-					});
+					if (flg.length === 24) { // updated 'publishedAt' of channel branch
+						var query = firebaseChannelRef.orderByChild("id").equalTo(key);
+						query.once("child_added", function (snapshot) {
+							snapshot.ref.update({ publishedAt: videoPublishedAtTimeStamp })
+						});
+					} else { // updated 'publishedAt' of username branch
+						var query = firebaseUsernameRef.orderByChild("username").equalTo(key);
+						query.once("child_added", function (snapshot) {
+							snapshot.ref.update({ publishedAt: videoPublishedAtTimeStamp })
+						});
+					}
+					
 
 					//output = '<li><iframe src=\"//www.youtube.com/embed/'+videoId+'\"></iframe></li>';
 					output = '<li>' + videoTitle + '</li>';
