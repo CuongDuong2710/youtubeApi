@@ -194,18 +194,6 @@ function checkNewVideo(dataItem, publishedAt, key) {
 					console.log("newer---");
 					videoTitle = item.snippet.title;
 					videoId = item.snippet.resourceId.videoId;
-					videoImage = item.snippet.thumbnails.high.url;
-					videoGeneral = 'true';
-					videoPublishedAt = item.snippet.publishedAt;
-
-					video = {
-						categoryId: '',
-						image: videoImage,
-						isGeneral: true,
-						title: videoTitle,
-						videoId: videoId,
-						publishedAt: videoPublishedAt
-					}
 
 					if (flg.length === 24) { // updated 'publishedAt' of channel branch
 						var query = firebaseChannelRef.orderByChild("id").equalTo(key);
@@ -219,23 +207,19 @@ function checkNewVideo(dataItem, publishedAt, key) {
 						});
 					}
 					
+					// get CategoryId
+					getCategoryId(videoId);
 
 					//output = '<li><iframe src=\"//www.youtube.com/embed/'+videoId+'\"></iframe></li>';
 					output = '<li>' + videoTitle + '</li>';
 
 					// Append to results listStyleType
 					$('#results').append(output);
+
+					
 				}
-
-				//console.log(JSON.parse(JSON.stringify(video)));
-
-				// push data to firebase
-				firebaseRef.push().set(video);
-
-				// get CategoryId
-				getCategoryId(videoId);
 			})
-			
+
 			if (typeof response.nextPageToken == "undefined"){
 				return false;
 			} else {				
@@ -357,41 +341,26 @@ function checkAndGetNewPlaylist(dataItem, publishedAt, key) {
 					console.log("newer---");
 					videoTitle = item.snippet.title;
 					videoId = item.snippet.resourceId.videoId;
-					videoImage = item.snippet.thumbnails.high.url;
-					videoGeneral = 'true';
-					videoPublishedAt = item.snippet.publishedAt;
-
-					video = {
-						categoryId: '',
-						image: videoImage,
-						isGeneral: true,
-						title: videoTitle,
-						videoId: videoId,
-						publishedAt: videoPublishedAt
-					}
 
 					// updated 'publishedAt' of playlist branch
 					var query = firebasePlaylistRef.orderByChild("playlist").equalTo(key);
 					query.once("child_added", function (snapshot) {
 						snapshot.ref.update({ publishedAt: videoPublishedAtTimeStamp })
 					});
+
+					// get CategoryId
+					getCategoryId(videoId);
 					
 					//output = '<li><iframe src=\"//www.youtube.com/embed/'+videoId+'\"></iframe></li>';
 					output = '<li>' + videoTitle + '</li>';
 
 					// Append to results listStyleType
 					$('#results').append(output);
+
+					
 				}
-
-				//console.log(JSON.parse(JSON.stringify(video)));
-
-				// push data to firebase
-				firebaseRef.push().set(video);
-
-				// get CategoryId
-				getCategoryId(videoId);
 			})
-			
+
 			if (typeof response.nextPageToken == "undefined"){
 				return false;
 			} else {				
