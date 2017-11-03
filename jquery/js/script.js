@@ -209,14 +209,6 @@ function checkNewVideo(dataItem, publishedAt, key) {
 					
 					// get CategoryId
 					getCategoryId(videoId);
-
-					//output = '<li><iframe src=\"//www.youtube.com/embed/'+videoId+'\"></iframe></li>';
-					output = '<li>' + videoTitle + '</li>';
-
-					// Append to results listStyleType
-					$('#results').append(output);
-
-					
 				}
 			})
 
@@ -350,14 +342,6 @@ function checkAndGetNewPlaylist(dataItem, publishedAt, key) {
 
 					// get CategoryId
 					getCategoryId(videoId);
-					
-					//output = '<li><iframe src=\"//www.youtube.com/embed/'+videoId+'\"></iframe></li>';
-					output = '<li>' + videoTitle + '</li>';
-
-					// Append to results listStyleType
-					$('#results').append(output);
-
-					
 				}
 			})
 
