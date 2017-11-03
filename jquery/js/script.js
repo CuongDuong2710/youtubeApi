@@ -1,5 +1,4 @@
 var channelName = 'DJASSKICKER';
-var video;
 var dataItem = null;
 var firebaseRef = null;
 var firebaseChannelRef = null;
@@ -14,6 +13,8 @@ var username = null;
 var flgPlaylist = null;
 // playlist data
 var playlist = null;
+// video data
+var video = null;
 
 /**
  * Pressing submit channel button
@@ -461,7 +462,7 @@ function getUploadsId(data, key) {
 				pid = item.contentDetails.relatedPlaylists.uploads;
 
 				dataItem = {
-					part: 'snippet',
+					part: 'snippet,status',
 					maxResults: 50,
 					playlistId: pid,
 					key: 'AIzaSyDlMX3v-eiC_SLkwuOrpvL19lRpTZbW4fI'
@@ -484,6 +485,7 @@ function getVids(dataVid, key) {
 
 			var output;
 
+			// sorting array descending by publishedAt
 			var array = response.items.sort(function(a,b){
 				var keyA = new Date(a.snippet.publishedAt);
 				var keyB = new Date(b.snippet.publishedAt);
@@ -501,7 +503,7 @@ function getVids(dataVid, key) {
 					username["publishedAt"] = Date.parse(item.snippet.publishedAt);
 
 					if (count === 1) {
-						// push at first child
+						// push at first child of username branch
 						firebaseUsernameRef.push().set(username);
 					}
 				}
@@ -510,30 +512,24 @@ function getVids(dataVid, key) {
 					$.each(array, function(j, arr) { // push lasted publishedAt at playlist branch
 						console.log("playlist['publishedAt']", arr.snippet.publishedAt);
 						playlist["publishedAt"] = Date.parse(item.snippet.publishedAt);
-						firebasePlaylistRef.push().set(playlist);
+						//firebasePlaylistRef.push().set(playlist);
 						return false;
 					})
 				}
 
 				videoTitle = item.snippet.title;
 				videoId = item.snippet.resourceId.videoId;
-				videoImage = item.snippet.thumbnails.high.url;
 				videoGeneral = 'true';
 				videoPublishedAt = item.snippet.publishedAt;
 
 				video = {
 					categoryId: '',
-					image: videoImage,
+					image: '',
 					isGeneral: true,
 					title: videoTitle,
 					videoId: videoId,
 					publishedAt: videoPublishedAt
 				}
-
-				//console.log(JSON.parse(JSON.stringify(video)));
-
-				// push data to firebase
-				firebaseRef.push().set(video);
 
 				// get CategoryId
 				getCategoryId(videoId);
@@ -553,7 +549,6 @@ function getVids(dataVid, key) {
 				var dataTemmp = dataItem;
 				//console.log("response.nextPageToken: " + response.nextPageToken);
 				dataTemmp['pageToken'] = response.nextPageToken;
-				//alert(dataTemmp['pageToken'] );
 				//call again
 				if (getVids(dataTemmp) == false) {
 					return false;
@@ -572,24 +567,28 @@ function getCategoryId(videoId) {
 	//console.log("videoId: ", videoId);
 	$.get(
 		"https://www.googleapis.com/youtube/v3/videos", {
-			part: 'snippet',
+			part: 'snippet,status',
 			id: videoId,
 			key: 'AIzaSyDlMX3v-eiC_SLkwuOrpvL19lRpTZbW4fI'
 		},
 		function (data) {
 			var output;
 			$.each(data.items, function (i, item) {
-				videoCategoryId = item.snippet.categoryId;
-				//console.log("videoCategoryId: ", videoCategoryId);
 
-				// updated categoryId of videoId
-				var query = firebaseRef.orderByChild("videoId").equalTo(videoId);
-				query.once("child_added", function (snapshot) {
-					snapshot.ref.update({ categoryId: videoCategoryId })
-				});
+				var status = item.status.privacyStatus;
+				console.log("status 222: ", status);
 
-				//console.log(JSON.parse(JSON.stringify(video)));
-			})
+				if (status === 'public') {
+					video["videoCategoryId"] = item.snippet.categoryId;
+					console.log("videoCategoryId: ", item.snippet.categoryId);
+	
+					video["videoImage"] = item.snippet.thumbnails.high.url;
+					console.log("videoImage: ", item.snippet.thumbnails.high.url);
+				}
+
+				// push data to firebase
+				firebaseRef.push().set(video);
+			});
 		}
 	)
 }
@@ -610,7 +609,7 @@ function getVideoById(videoId, data) {
 				videoId = videoId;
 				videoImage = item.snippet.thumbnails.high.url;
 				videoGeneral = 'true';
-				videoCategoryId = item.snippet.categoryId;
+				videoCategoryId = item.snippet.categoryId;a
 				videoPublishedAt = item.snippet.publishedAt;
 
 				video = {
