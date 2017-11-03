@@ -22,6 +22,7 @@ var video = null;
 function submitChannel() {
 	//initial
 	dataItem = null;
+	video = null;
 	//clear
 	$('#results').html('');
 
@@ -260,6 +261,7 @@ function checkNewVideo(dataItem, publishedAt, key) {
 function submitPlaylist() {
 	//initial
 	dataItem = null;
+	video = null;
 
 	flgPlaylist = 1;
 
@@ -413,6 +415,7 @@ function checkAndGetNewPlaylist(dataItem, publishedAt, key) {
  * Pressing submit video button
  */
 function submitVideo() {
+	video = null;
 	// clear
 	$('#results').html('');
 
@@ -517,28 +520,11 @@ function getVids(dataVid, key) {
 					})
 				}
 
-				videoTitle = item.snippet.title;
-				videoId = item.snippet.resourceId.videoId;
-				videoGeneral = 'true';
-				videoPublishedAt = item.snippet.publishedAt;
-
-				video = {
-					categoryId: '',
-					image: '',
-					isGeneral: true,
-					title: videoTitle,
-					videoId: videoId,
-					publishedAt: videoPublishedAt
-				}
+				var videoId = item.snippet.resourceId.videoId;
 
 				// get CategoryId
 				getCategoryId(videoId);
 
-				//output = '<li><iframe src=\"//www.youtube.com/embed/'+videoId+'\"></iframe></li>';
-				output = '<li>' + videoTitle + '</li>';
-
-				// Append to results listStyleType
-				$('#results').append(output);
 			})
 
 			if (typeof response.nextPageToken == "undefined") {
@@ -564,7 +550,7 @@ function getVids(dataVid, key) {
  * @param {*} videoId 
  */
 function getCategoryId(videoId) {
-	//console.log("videoId: ", videoId);
+	console.log("videoId: ", videoId);
 	$.get(
 		"https://www.googleapis.com/youtube/v3/videos", {
 			part: 'snippet,status',
@@ -576,18 +562,29 @@ function getCategoryId(videoId) {
 			$.each(data.items, function (i, item) {
 
 				var status = item.status.privacyStatus;
-				console.log("status 222: ", status);
 
 				if (status === 'public') {
-					video["videoCategoryId"] = item.snippet.categoryId;
-					console.log("videoCategoryId: ", item.snippet.categoryId);
-	
-					video["videoImage"] = item.snippet.thumbnails.high.url;
-					console.log("videoImage: ", item.snippet.thumbnails.high.url);
-				}
 
-				// push data to firebase
-				firebaseRef.push().set(video);
+					video = {
+						categoryId: item.snippet.categoryId,
+						image: item.snippet.thumbnails.high.url,
+						isGeneral: true,
+						title: item.snippet.title,
+						videoId,
+						publishedAt: item.snippet.publishedAt
+					}
+
+					console.log("title", item.snippet.title);
+
+					// push data to firebase
+					firebaseRef.push().set(video);
+
+					//output = '<li><iframe src=\"//www.youtube.com/embed/'+videoId+'\"></iframe></li>';
+					output = '<li>' + item.snippet.title + '</li>';
+				
+					// Append to results listStyleType
+					$('#results').append(output);
+				}
 			});
 		}
 	)
