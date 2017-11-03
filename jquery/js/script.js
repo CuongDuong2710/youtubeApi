@@ -1,4 +1,3 @@
-var channelName = 'DJASSKICKER';
 var dataItem = null;
 var firebaseRef = null;
 var firebaseChannelRef = null;
@@ -550,7 +549,6 @@ function getVids(dataVid, key) {
  * @param {*} videoId 
  */
 function getCategoryId(videoId) {
-	console.log("videoId: ", videoId);
 	$.get(
 		"https://www.googleapis.com/youtube/v3/videos", {
 			part: 'snippet,status',
@@ -574,7 +572,8 @@ function getCategoryId(videoId) {
 						publishedAt: item.snippet.publishedAt
 					}
 
-					console.log("title", item.snippet.title);
+					console.log("videoId: ", videoId);
+					console.log("title: ", item.snippet.title);
 
 					// push data to firebase
 					firebaseRef.push().set(video);
