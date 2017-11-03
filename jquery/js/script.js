@@ -514,7 +514,7 @@ function getVids(dataVid, key) {
 					$.each(array, function(j, arr) { // push lasted publishedAt at playlist branch
 						console.log("playlist['publishedAt']", arr.snippet.publishedAt);
 						playlist["publishedAt"] = Date.parse(item.snippet.publishedAt);
-						//firebasePlaylistRef.push().set(playlist);
+						firebasePlaylistRef.push().set(playlist);
 						return false;
 					})
 				}
@@ -573,7 +573,6 @@ function getCategoryId(videoId) {
 					}
 
 					console.log("videoId: ", videoId);
-					console.log("title: ", item.snippet.title);
 
 					// push data to firebase
 					firebaseRef.push().set(video);
@@ -605,7 +604,7 @@ function getVideoById(videoId, data) {
 				videoId = videoId;
 				videoImage = item.snippet.thumbnails.high.url;
 				videoGeneral = 'true';
-				videoCategoryId = item.snippet.categoryId;a
+				videoCategoryId = item.snippet.categoryId;
 				videoPublishedAt = item.snippet.publishedAt;
 
 				video = {
